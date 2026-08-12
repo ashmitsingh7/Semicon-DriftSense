@@ -1,0 +1,272 @@
+{
+  "dram_000": {
+    "x": 758.56,
+    "y": 821.5,
+    "confidence": 0.8233,
+    "ambiguity_ratio": 1.25,
+    "scale": 10.417,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_002": {
+    "x": 163.14,
+    "y": 585.27,
+    "confidence": 0.8991,
+    "ambiguity_ratio": 1.65,
+    "scale": 10.0,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_004": {
+    "x": 943.78,
+    "y": 406.56,
+    "confidence": 0.7586,
+    "ambiguity_ratio": 1.319,
+    "scale": 10.417,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "dram_006": {
+    "x": 418.18,
+    "y": 349.47,
+    "confidence": 0.8759,
+    "ambiguity_ratio": 1.724,
+    "scale": 10.87,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "dram_008": {
+    "x": 446.97,
+    "y": 703.71,
+    "confidence": 0.8516,
+    "ambiguity_ratio": 1.346,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": false
+  },
+  "dram_010": {
+    "x": 724.07,
+    "y": 396.1,
+    "confidence": 0.833,
+    "ambiguity_ratio": 1.829,
+    "scale": 10.87,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "dram_012": {
+    "x": 221.31,
+    "y": 291.3,
+    "confidence": 0.7371,
+    "ambiguity_ratio": 1.248,
+    "scale": 10.87,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_014": {
+    "x": 264.42,
+    "y": 509.48,
+    "confidence": 0.9113,
+    "ambiguity_ratio": 1.48,
+    "scale": 10.417,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_016": {
+    "x": 166.76,
+    "y": 874.52,
+    "confidence": 0.9067,
+    "ambiguity_ratio": 1.738,
+    "scale": 10.417,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_018": {
+    "x": 635.33,
+    "y": 610.49,
+    "confidence": 0.8708,
+    "ambiguity_ratio": 1.423,
+    "scale": 10.417,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "dram_020": {
+    "x": 477.5,
+    "y": 883.11,
+    "confidence": 0.9235,
+    "ambiguity_ratio": 2.412,
+    "scale": 10.0,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_022": {
+    "x": 186.48,
+    "y": 465.38,
+    "confidence": 0.937,
+    "ambiguity_ratio": 1.788,
+    "scale": 10.417,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_024": {
+    "x": 125.57,
+    "y": 909.73,
+    "confidence": 0.9208,
+    "ambiguity_ratio": 1.739,
+    "scale": 10.417,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "dram_026": {
+    "x": 32.84,
+    "y": 35.17,
+    "confidence": 0.7752,
+    "ambiguity_ratio": 1.229,
+    "scale": 10.0,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "dram_028": {
+    "x": 433.08,
+    "y": 101.7,
+    "confidence": 0.6015,
+    "ambiguity_ratio": 1.547,
+    "scale": 10.0,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "finfet_001": {
+    "x": 591.95,
+    "y": 422.14,
+    "confidence": 0.831,
+    "ambiguity_ratio": 1.076,
+    "scale": 10.0,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false
+  },
+  "finfet_003": {
+    "x": 934.38,
+    "y": 434.34,
+    "confidence": 0.7554,
+    "ambiguity_ratio": 1.127,
+    "scale": 10.417,
+    "rotation_deg": 1,
+    "low_confidence_flag": false
+  },
+  "finfet_005": {
+    "x": 800.13,
+    "y": 479.58,
+    "confidence": 0.5386,
+    "ambiguity_ratio": 1.062,
+    "scale": 10.0,
+    "rotation_deg": 1,
+    "low_confidence_flag": false
+  },
+  "finfet_007": {
+    "x": 570.45,
+    "y": 76.04,
+    "confidence": 0.5642,
+    "ambiguity_ratio": 1.159,
+    "scale": 9.615,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false
+  },
+  "finfet_009": {
+    "x": 495.05,
+    "y": 890.55,
+    "confidence": 0.7653,
+    "ambiguity_ratio": 1.04,
+    "scale": 9.615,
+    "rotation_deg": -1,
+    "low_confidence_flag": true
+  },
+  "finfet_011": {
+    "x": 351.21,
+    "y": 354.14,
+    "confidence": 0.6929,
+    "ambiguity_ratio": 1.05,
+    "scale": 10.0,
+    "rotation_deg": 1,
+    "low_confidence_flag": true
+  },
+  "finfet_013": {
+    "x": 862.91,
+    "y": 528.66,
+    "confidence": 0.6348,
+    "ambiguity_ratio": 1.133,
+    "scale": 10.417,
+    "rotation_deg": 1,
+    "low_confidence_flag": false
+  },
+  "finfet_015": {
+    "x": 103.92,
+    "y": 595.9,
+    "confidence": 0.8214,
+    "ambiguity_ratio": 1.023,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": true
+  },
+  "finfet_017": {
+    "x": 608.95,
+    "y": 862.23,
+    "confidence": 0.6848,
+    "ambiguity_ratio": 1.001,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": true
+  },
+  "finfet_019": {
+    "x": 338.68,
+    "y": 329.32,
+    "confidence": 0.5537,
+    "ambiguity_ratio": 1.11,
+    "scale": 10.417,
+    "rotation_deg": -1,
+    "low_confidence_flag": false
+  },
+  "finfet_021": {
+    "x": 925.99,
+    "y": 369.98,
+    "confidence": 0.8002,
+    "ambiguity_ratio": 1.001,
+    "scale": 9.615,
+    "rotation_deg": -1,
+    "low_confidence_flag": true
+  },
+  "finfet_023": {
+    "x": 52.01,
+    "y": 443.13,
+    "confidence": 0.734,
+    "ambiguity_ratio": 1.002,
+    "scale": 10.0,
+    "rotation_deg": 1,
+    "low_confidence_flag": true
+  },
+  "finfet_025": {
+    "x": 818.4,
+    "y": 384.91,
+    "confidence": 0.6741,
+    "ambiguity_ratio": 1.117,
+    "scale": 10.417,
+    "rotation_deg": 0,
+    "low_confidence_flag": false
+  },
+  "finfet_027": {
+    "x": 397.05,
+    "y": 899.03,
+    "confidence": 0.5436,
+    "ambiguity_ratio": 1.079,
+    "scale": 9.615,
+    "rotation_deg": 1,
+    "low_confidence_flag": false
+  },
+  "finfet_029": {
+    "x": 451.8,
+    "y": 560.24,
+    "confidence": 0.8266,
+    "ambiguity_ratio": 1.07,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": false
+  }
+}

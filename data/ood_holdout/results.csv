@@ -1,0 +1,11 @@
+sample_id,style,gt_x,gt_y,pred_x,pred_y,error_px,confidence,ambiguity_ratio,low_confidence_flag,success
+mixed_logic_000,mixed_logic,656.46,251.64,656.44,251.72,0.08,0.8199,2.591,False,True
+mixed_logic_001,mixed_logic,477.63,444.0,477.65,444.02,0.03,0.8043,2.482,False,True
+mixed_logic_002,mixed_logic,56.82,687.48,56.84,687.53,0.05,0.8644,2.715,False,True
+mixed_logic_003,mixed_logic,585.88,866.37,585.91,866.37,0.03,0.861,2.308,False,True
+mixed_logic_004,mixed_logic,692.38,551.56,692.32,551.63,0.09,0.8294,2.683,False,True
+mixed_logic_005,mixed_logic,646.58,733.8,646.59,733.77,0.03,0.7643,2.295,False,True
+mixed_logic_006,mixed_logic,473.07,720.36,473.09,720.25,0.11,0.8941,3.055,False,True
+mixed_logic_007,mixed_logic,493.96,765.56,493.98,765.5,0.06,0.8228,2.567,False,True
+mixed_logic_008,mixed_logic,941.92,307.94,941.96,307.92,0.04,0.6803,2.428,False,True
+mixed_logic_009,mixed_logic,514.4,412.67,514.34,412.75,0.1,0.7684,2.217,False,True
