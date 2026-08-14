@@ -7,14 +7,19 @@ Independent script, does not modify localizer.py / native_verifier.py.
 Run:
     python3 bench_phase_reranker.py
 """
+import sys
 import json, os, time
 import numpy as np
 import cv2
 
+# Add src to path for imports
+SYSTEM_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(SYSTEM_ROOT, "src"))
+
 from localizer import localize_topk
 from phase_reranker import rerank
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATASETS = [
     (os.path.join(REPO, "data", "self_eval"), "self_eval"),
     (os.path.join(REPO, "data", "ood_holdout"), "ood_holdout"),
