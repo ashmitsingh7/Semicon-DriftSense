@@ -54,3 +54,6 @@ submission/*.pdf
 
 # Documentation build artifacts
 docs/_build/
+
+# Experiment results (generated)
+results/

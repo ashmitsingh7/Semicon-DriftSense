@@ -10,14 +10,19 @@ Expected input layout (same as data/self_eval):
     <input_dir>/reference/<sample_id>.png
     <input_dir>/search/<sample_id>.png
 
-Usage:
+Usage (batch mode):
     python3 run_inference.py --input ../data/self_eval --output ../data/predictions
+
+Usage (single-pair evaluator mode):
+    python3 run_inference.py --ref <ref.png> --search <search.png> --nominal_downsample 10.0
+    Outputs JSON to stdout: {"x": ..., "y": ..., "confidence": ..., "ambiguity_ratio": ..., ...}
 """
 
 import argparse
 import glob
 import json
 import os
+import sys
 import time
 
 import cv2
@@ -25,15 +30,8 @@ import cv2
 from localizer import localize
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input", required=True,
-                     help="directory containing reference/ and search/ subfolders")
-    ap.add_argument("--output", required=True,
-                     help="directory to write predictions.json + timing_report.json")
-    ap.add_argument("--nominal_downsample", type=float, default=10.0)
-    args = ap.parse_args()
-
+def run_batch(args):
+    """Original batch mode: directory input -> predictions.json + timing_report.json"""
     os.makedirs(args.output, exist_ok=True)
 
     search_paths = sorted(glob.glob(os.path.join(args.input, "search", "*.png")))
@@ -84,6 +82,64 @@ def main():
     print(f"Wrote {n} predictions to {pred_path}")
     print(f"Timing report: {timing_path}")
     print(json.dumps(timing, indent=2))
+
+
+def run_single_pair(args):
+    """Single-pair evaluator mode: stdin/stdout or file args -> JSON to stdout"""
+    ref_img = cv2.imread(args.ref, cv2.IMREAD_GRAYSCALE)
+    search_img = cv2.imread(args.search, cv2.IMREAD_GRAYSCALE)
+
+    if ref_img is None:
+        sys.stderr.write(f"Error: could not read reference image: {args.ref}\n")
+        sys.exit(1)
+    if search_img is None:
+        sys.stderr.write(f"Error: could not read search image: {args.search}\n")
+        sys.exit(1)
+
+    pred = localize(ref_img, search_img, nominal_downsample=args.nominal_downsample)
+    # Output only the prediction dict as JSON to stdout for easy parsing
+    json.dump(pred, sys.stdout)
+    sys.stdout.write("\n")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    # Batch mode args
+    ap.add_argument("--input",
+                     help="directory containing reference/ and search/ subfolders (batch mode)")
+    ap.add_argument("--output",
+                     help="directory to write predictions.json + timing_report.json (batch mode)")
+    # Single-pair mode args
+    ap.add_argument("--ref",
+                     help="path to reference image (single-pair mode)")
+    ap.add_argument("--search",
+                     help="path to search image (single-pair mode)")
+    # Common
+    ap.add_argument("--nominal_downsample", type=float, default=10.0)
+    args = ap.parse_args()
+
+    # Determine mode
+    single_pair_mode = (args.ref is not None and args.search is not None)
+    batch_mode = (args.input is not None and args.output is not None)
+
+    if single_pair_mode and batch_mode:
+        sys.stderr.write("Error: specify either (--ref + --search) for single-pair mode OR (--input + --output) for batch mode, not both.\n")
+        sys.exit(1)
+    elif single_pair_mode:
+        if not args.ref or not args.search:
+            sys.stderr.write("Error: single-pair mode requires both --ref and --search.\n")
+            sys.exit(1)
+        run_single_pair(args)
+    elif batch_mode:
+        if not args.input or not args.output:
+            sys.stderr.write("Error: batch mode requires both --input and --output.\n")
+            sys.exit(1)
+        run_batch(args)
+    else:
+        # Default to batch mode if neither specified but input/output given (backward compat)
+        # Otherwise show help
+        ap.print_help()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
