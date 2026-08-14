@@ -1,187 +1,221 @@
 # Drift-Sense: AI-Powered Navigation-Error Recovery for Wafer Inspection Tools
 
-Semicon India Hackathon 2026 — Applied Materials problem statement.
+**Semicon India Hackathon 2026 — Applied Materials Problem Statement**
+
+---
 
 ## Problem
 
-A wafer inspection tool must return to the exact same die site thousands of
-times a day. Motion-stage drift (thermal expansion, vibration, mechanical
-slack) means the tool sometimes lands a few pixels off target. Because every
-die on a wafer carries the same repeating circuit layout, the landed image
-looks almost identical to the correct one — the challenge is finding *the*
-correct site inside a sea of visually near-identical periodic structure.
+A wafer inspection tool must return to the exact same die site thousands of times a day, with measurements comparable across visits and across tools. In practice, motion stages accumulate small errors between visits — thermal expansion, vibration, mechanical slack — so a revisit can land the tool several pixels away from the intended site.
 
-**Task:** given a Reference Image (the known-correct site, native
-resolution) and a Search Image (a ~10x-lower-magnification view around
-where the tool actually landed), return the pixel center `(x, y)` in the
-Search Image where the reference pattern appears.
+Because every die on a wafer carries the **same repeating circuit layout**, the landed image looks almost identical to the correct one. The core difficulty is not recognizing the pattern — it is pinpointing **which occurrence** of a highly repetitive pattern is the correct one.
 
-## Repo layout
+**Formal task**: Given a Reference Image (the known-correct site, native resolution) and a Search Image (a ~10× lower-magnification view captured around where the tool actually landed), output the pixel center `(x, y)` in the Search Image where the reference pattern appears.
+
+---
+
+## Why Ordinary Template Matching Struggles
+
+Standard template matching (normalized cross-correlation, NCC) finds the *single highest peak* in the correlation surface. On a periodic semiconductor layout, the correlation surface has **many near-tied peaks** at multiples of the pattern pitch. The global maximum is often a false periodic occurrence, not the true site.
+
+The three canonical failure modes in our benchmark:
+
+| Case | Error | Root Cause |
+|------|-------|------------|
+| `finfet_017` | 214 px | Correct coarse peak found, but Stage-2 refinement converges to wrong periodic cell |
+| `finfet_021` | 571 px | True site discarded by global argmax; survives in top-K pool but misranked |
+| `finfet_023` | 868 px | True site absent from even top-100 coarse peaks (~98.5th percentile) |
+
+All three are **correctly self-flagged as low-confidence** by the ambiguity ratio — the algorithm knows when it doesn't know.
+
+---
+
+## DriftSense Architecture
+
+### V1: Two-Stage NCC Baseline (Production Algorithm)
 
 ```
-src/
-  pattern_synth.py       synthetic DRAM/FinFET/mixed_logic generation + SEM-like physics
-  build_dataset.py       builds paired reference/search images + ground truth
-  localizer.py            the navigation-error-recovery matching algorithm (2-stage NCC)
-  evaluate.py              self-evaluation against recorded ground truth
-  run_inference.py         directory-in/directory-out submission entry point + timing
-  visualize_ambiguity.py   renders the NCC correlation surface for a chosen sample
-  ablation_study.py        success rate vs. noise/rotation severity sweep
-data/
-  self_eval/               30 generated pairs (DRAM+FinFET) + ground_truth.json + results.csv
-  ood_holdout/              10 mixed_logic pairs, held out from all tuning, for generalization check
-  predictions/               run_inference.py output + timing_report.json
-docs/
-  design_notes.md            longer write-up of design decisions and citations
-  figures/                    ambiguity heatmap + ablation plots
+src/localizer.py → localize()
 ```
+
+1. **Stage 1 (Coarse, Global)**: Single nominal-scale NCC over entire Search image
+   - Also computes **ambiguity ratio** (peak vs. best score elsewhere in whole image)
+   - Flags low-confidence when ambiguity_ratio < 1.05 or confidence < 0.35
+
+2. **Stage 2 (Fine, Local)**: Scale×rotation grid search (5 scales × 7 rotations) in small window around Stage-1 peak
+   - Parabolic sub-pixel peak refinement
+   - Confining grid search to local window gives **3× speedup** (21.9s → 7.2s on 30 pairs) with no accuracy loss
+
+**Results (40-pair benchmark: 15 DRAM + 15 FinFET + 10 OOD mixed_logic)**:
+- ≤5 px: **92.5%**
+- ≤4 px: 90.0%
+- ≤2 px: 90.0%
+- ≤1 px: 90.0%
+- Median error: **0.09 px**
+- DRAM: 100% (15/15)
+- FinFET: 80% (12/15)
+- OOD mixed_logic: 100% (10/10)
+- Runtime: ~132 ms/sample (CPU)
+
+### V2: Top-K Candidate Generation (Candidate Pool for Experiments)
+
+```
+src/localizer.py → localize_topk()
+```
+
+- Global NCC → top-K spatially-separated peaks (NMS) → independent Stage-2 refinement each → dedup on refined coordinates (key fix: dedup_radius = nominal_side, not window radius) → ranked list
+- **Candidate recall @5px**: K=10: 95%, K=20: 95%, K=40: 95%
+- Fixes the "candidate never existed" problem for `finfet_021` (GT enters pool at 0.02 px) but **not** `finfet_017` (Stage-2-induced) or `finfet_023` (candidate generation failure)
+- Final ranked accuracy = V1 (92.5%), but enables reranking experiments
+- Runtime: ~3.37s/sample at K=40
+
+---
+
+## Experimental Journey (All Rejected as Final Algorithm)
+
+| Experiment | Hypothesis | Result | Why Rejected |
+|------------|------------|--------|--------------|
+| **V3 Native Verification** (`src/native_verifier.py`) | Native-res NCC re-ranks V2 pool | 67.5% @5px | Rescued `finfet_021` but hurt 11 DRAM cases (100%→26.7%) |
+| **Gradient (Sobel)** | Structural edges break periodicity | 37.5% / 70.0% | Helped `finfet_017` pool (1.45px) but failed globally |
+| **Periodicity Signatures** (orientation/FFT/Gabor) | Layout frequency identifies correct cell | ~0% | Translation-invariant within lattice — tells structure type, not which occurrence |
+| **V4 Phase Correlation** (`experiments/phase_correlation/`) | Local phase separates true site from decoys | 87.5% @5px | Rescued `finfet_021` but **broke 3 already-correct DRAM cases** (30px window too noisy) |
+
+**The strongest scientific story**: *"We tested multiple increasingly domain-aware approaches and retained the robust baseline when they failed to generalize."*
+
+---
+
+## Repository Structure
+
+```
+Semicon-DriftSense/
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── .gitignore
+│
+├── src/                          # Production & core library code
+│   ├── localizer.py              # V1 (localize) + V2 (localize_topk)
+│   ├── native_verifier.py        # V3 experiment (self-eval only)
+│   ├── pattern_synth.py          # Synthetic DRAM/FinFET/mixed Logic canvas
+│   ├── build_dataset.py          # Generates self_eval + ood_holdout + GT
+│   ├── evaluate.py               # Benchmark runner
+│   ├── run_inference.py          # Submission entry point + timing
+│   ├── visualize_ambiguity.py    # Correlation surface heatmaps
+│   ├── ablation_study.py         # Noise/rotation robustness sweeps
+│   └── build_submission_pdf.py   # Hackathon PDF builder
+│
+├── experiments/                  # Documented experiments (not production)
+│   ├── v2/
+│   ├── v3/
+│   ├── gradient/
+│   ├── periodicity/
+│   └── phase_correlation/        # V4: local phase-correlation reranker
+│       ├── phase_reranker.py
+│       ├── bench_phase_reranker.py
+│       ├── phase_reranker_experiment.md
+│       ├── phase_reranker_ablation.csv
+│       ├── make_v4_diagnostics.py
+│       └── v4_diagnostic_cases.png
+│
+├── docs/
+│   ├── design_notes.md           # Detailed design decisions + citations
+│   ├── experiments.md            # Consolidated experiment log
+│   ├── failure_analysis.md       # Deep dive on finfet_017/021/023
+│   └── figures/
+│       ├── ambiguity_finfet_023.png
+│       └── ablation.png
+│
+├── data/                         # Benchmark datasets (committed)
+│   ├── self_eval/                # 30 pairs (DRAM/FinFET) + ground_truth.json
+│   ├── ood_holdout/              # 10 mixed_logic pairs (never tuned on)
+│   └── predictions/              # run_inference.py output + timing
+│
+��── submission/
+    └── DriftSense_Submission.pdf
+```
+
+---
 
 ## Quickstart
 
+### Prerequisites
 ```bash
-pip install opencv-python numpy matplotlib
+pip install -r requirements.txt
+# numpy>=1.24, opencv-python>=4.8, matplotlib>=3.7, reportlab>=4.0
+```
+
+### Generate Datasets
+```bash
 cd src
-python3 build_dataset.py --out ../data/self_eval --n 30            # main dataset
+python3 build_dataset.py --out ../data/self_eval --n 30                    # main dataset
 python3 build_dataset.py --out ../data/ood_holdout --n 10 --styles mixed_logic  # OOD holdout
-python3 evaluate.py --data ../data/self_eval --out_csv ../data/self_eval/results.csv
-python3 run_inference.py --input ../data/self_eval --output ../data/predictions  # submission entry point + timing
+```
+
+### Run V1 Baseline (Production)
+```bash
+python3 evaluate.py --data ../data/self_eval
+python3 evaluate.py --data ../data/ood_holdout
+```
+
+### Run Submission Inference + Timing
+```bash
+python3 run_inference.py --input ../data/self_eval --output ../data/predictions
+```
+
+### Visualize Failure Cases
+```bash
 python3 visualize_ambiguity.py --data ../data/self_eval --sample finfet_023 --out ../docs/figures/ambiguity_finfet_023.png
+```
+
+### Robustness Ablation
+```bash
 python3 ablation_study.py --out ../docs/figures/ablation.png
 ```
 
-## Results
+### Run Documented Experiments
+```bash
+# V3 native verification (self-eval only; regenerates canvas from seed)
+python3 native_verifier.py ../data/self_eval finfet_021
 
-| metric | value |
-|---|---|
-| success rate (error ≤ 5 px), 30-pair self-eval | 90.0% (27/30) |
-| median error on hits | 0.10 px |
-| DRAM-style success | 100% (15/15) |
-| FinFET-style success | 80% (12/15) |
-| all 3 misses self-flagged low-confidence | yes (3/3) |
-| **held-out `mixed_logic` style (never tuned on)** | **100% (10/10)**, median error 0.06 px |
-| end-to-end throughput (CPU, this sandbox) | ~240 ms/pair, ~4.1 samples/s |
-| throughput after 2-stage search optimization | 21.9s → 7.2s total on 30 pairs (~3x) |
+# V4 phase-correlation reranker (full 40-pair benchmark)
+python3 ../experiments/phase_correlation/bench_phase_reranker.py
+```
 
-The 3 misses are all FinFET cases where the periodic pattern is genuinely
-ambiguous (correlation surface has many near-tied peaks — see
-`docs/figures/ambiguity_finfet_023.png`); the localizer's ambiguity-ratio
-signal flags all 3 as low-confidence rather than silently returning a
-wrong answer. The `mixed_logic` holdout — a third layout style the
-localizer was never adjusted for — scores *higher* than the tuned styles,
-because its irregular (non-periodic) structure has less inherent
-ambiguity; see `docs/design_notes.md` §2.
+---
 
-See `docs/figures/ablation.png` for how success rate degrades under
-increased sensor noise and rotation drift beyond the main dataset's
-settings.
+## Key Design Decisions (with Citations)
 
-## Dataset generator — design summary
+See `docs/design_notes.md` for full details:
 
-Each sample starts from one large native-resolution synthetic "die" canvas
-(10,000×10,000 px) built from vectorized periodic-grid formulas:
+1. **Shared native canvas** — Reference is a crop, Search is full canvas downsampled 10×. GT true by construction, not assertion.
+2. **Breaking perfect periodicity** — Low-frequency brightness field + sparse defects + guaranteed landmark blobs inside every reference footprint (sized to survive 10× downsample).
+3. **Independent degradation** — Separate RNGs for Reference/Search; never shared noise realization.
+4. **SEM physics** — Edge brightening (SE escape probability), mixed Poisson-Gaussian noise (shot noise + read noise), non-uniform brightness (charging/gain drift).
+5. **Two-stage search** — Coarse global NCC (also gives ambiguity signal) + fine local grid search. 3× throughput gain.
+6. **Ambiguity flag** — Peak-to-second-peak ratio; all 3 hard misses correctly self-flagged.
 
-- **DRAM-style**: horizontal word-lines + vertical bit-lines crossing at
-  right angles, with a contact/via dot at every intersection, following
-  standard DRAM 1T1C cell-array layout conventions.
-- **FinFET-style**: dense parallel vertical fins crossed by horizontal gate
-  bars at the intersection region, following standard multi-fin logic
-  layout conventions.
-- **mixed_logic-style** (held-out, never tuned on): irregular row-based
-  standard-cell blocks, used only to report out-of-distribution
-  generalization the way the hackathon's own hidden test set will.
+---
 
-The **Reference Image** is a native-resolution crop from this canvas. The
-**Search Image** is the *entire* canvas downsampled 10x — so the reference
-pattern is genuinely, verifiably present inside the search image at a
-location we record exactly as ground truth.
+## Known Limitations
 
-A perfectly periodic pattern is mathematically ambiguous under translation
-by any multiple of the pitch, so every canvas also gets: a smooth
-low-frequency brightness field (simulating non-uniform SE yield / charging
-drift), a scattering of small background defects, and — inside every
-reference footprint — a few guaranteed larger high-contrast landmark blobs
-(simulating local process variation / contamination), sized to survive the
-10x downsample. This is what makes each site locally unique and the task
-actually solvable, while still leaving some sites genuinely hard (see
-"Mandatory requirement: highly periodic difficult region" below).
+1. **V1 is a strong but simple NCC baseline** — it can be beaten on hard periodic sub-regions by approaches using more global context (e.g., learned embedding with contrastive/triplet loss on this generator).
+2. **Throughput measured on CPU only** — `cv2.matchTemplate`/`cv2.warpAffine` have CUDA drop-in equivalents (`cv2.cuda.*`) expected to give further speedup, not yet independently verified.
+3. **Noise/edge parameters are citation-backed** but validation against real public-domain SEM images was started (candidates identified on Wikimedia Commons) and not completed.
+4. **finfet_023 remains unsolved** — GT absent from candidate pool under any intensity-based method tried. Requires fundamentally new candidate generation signal.
 
-Reference and Search images are then degraded **independently** (separate
-RNGs — never the same noise realization on both): Gaussian blur, a small
-rotation/scale jitter (representing residual stage drift), a real
-SEM-style edge-brightening pass, and a mixed Poisson-Gaussian sensor-noise
-model. The Search side uses a lower effective electron dose than the
-Reference side, so it is measurably noisier — matching the stated test-time
-behaviour.
+---
 
-## Algorithm
+## License
 
-`localizer.py` uses a **two-stage** multi-scale, small-rotation
-**normalized cross-correlation** (`cv2.matchTemplate`, `TM_CCOEFF_NORMED`)
-approach:
+MIT License — see `LICENSE` file.
 
-1. one coarse, global NCC pass (nominal scale, zero rotation) over the
-   *entire* search image — this also yields the ambiguity ratio (peak vs.
-   best score elsewhere in the whole image);
-2. a fine pass restricted to a small window around the coarse peak, where
-   the full scale × rotation grid (5 scales × 7 rotations) is searched,
-   with parabolic sub-pixel peak refinement.
+---
 
-Confining the expensive grid search to a small local window (instead of
-running it over the full image) is what took total runtime on the 30-pair
-self-eval set from 21.9s to 7.2s with no accuracy loss — see
-`docs/design_notes.md` §6. It also reports the **ambiguity ratio** and
-flags low-confidence matches — directly targeting the "failure-mode
-awareness" requirement, since a genuinely periodic/ambiguous region
-*should* be flagged rather than silently mis-reported (all 3 misses in the
-self-eval set are correctly flagged — see
-`docs/figures/ambiguity_finfet_023.png`).
+## Citation
 
-This NCC-based approach is a deliberately simple, fast, fully-explainable
-baseline (no training required) — a natural next step for a stronger
-submission is a learned matcher (e.g. a small CNN embedding trained with a
-contrastive/triplet loss on this same synthetic generator) that can use the
-periodic context more cleverly than raw pixel correlation.
-
-## Citations
-
-Augmentation, structural, and algorithmic choices are justified in
-`docs/design_notes.md` with the following references:
-
-1. S. M. Sze & K. K. Ng, *Physics of Semiconductor Devices*, 3rd ed., Wiley,
-   2007 — DRAM cell-array word-line/bit-line crossing geometry.
-2. International Roadmap for Devices and Systems (IRDS), "More Moore"
-   chapter, 2022 — FinFET fin pitch / gate pitch layout conventions.
-3. ETH Zürich, Dept. of Materials, "Secondary Electron Imaging" teaching
-   notes — SEM edge effect definition.
-4. Nanoscience Instruments, "Secondary Electrons in SEM: Unlocking Surface
-   Insights at the Nanoscale" — edge brightening in SE imaging.
-5. St. Cloud State University, Center for Microscopy & Imaging, "SEM A to
-   Z: Basic Knowledge for Using the SEM" — edge-effect width and cause.
-6. "Poisson shot noise parameter estimation from a single scanning
-   electron microscopy image" — SEM shot noise model.
-7. Mulapudi & Joy (2003); Cizmar et al. (2008), summarized in "Scanning
-   Electron Microscope Image SNR Monitoring" — Poisson+Gaussian SEM noise.
-8. "M-Denoiser: Unsupervised image denoising for real-world optical and
-   electron microscopy data", ScienceDirect — mixed Poisson-Gaussian
-   microscopy noise model.
-9. USPTO patent disclosure, "Sample surface structure measuring method" —
-   SE brightness dependence on local beam-incidence geometry.
-10. J. P. Lewis, "Fast Normalized Cross-Correlation," Vision Interface,
-    1995, pp. 120-123.
-11. K. Briechle & U. D. Hanebeck, "Template matching using fast normalized
-    cross correlation," Proc. SPIE 4387, 2001.
-
-## Known limitations / next steps
-
-- The NCC baseline is a strong-but-simple starting point; it can be beaten
-  on the hardest periodic sub-regions by approaches that use more global
-  context (e.g. matching multiple candidate peaks against absolute stage
-  coordinates, or a learned embedding).
-- Throughput has been measured and optimized on CPU (3x speedup via a
-  coarse-then-local two-stage search) but not yet profiled on an actual
-  H100; `cv2.matchTemplate`/`cv2.warpAffine` have direct `cv2.cuda`
-  equivalents, which is the obvious next step.
-- The dataset generator is fully synthetic; we started but did not finish
-  validating noise/edge-effect parameters against a real public-domain SEM
-  image (candidates identified on Wikimedia Commons) — flagged as
-  incomplete rather than claimed as done.
+If you use this work, please cite:
+```
+Drift-Sense: AI-Powered Navigation-Error Recovery for Wafer Inspection Tools
+Semicon India Hackathon 2026 — Applied Materials Problem Statement
+Team: [TEAM NAME], Vellore Institute of Technology
+```

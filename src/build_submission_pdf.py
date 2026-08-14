@@ -15,8 +15,12 @@ from reportlab.platypus import (
     PageBreak, ListFlowable, ListItem, HRFlowable,
 )
 
-OUT = "/mnt/user-data/outputs/DriftSense_Submission.pdf"
-FIGDIR = "/home/claude/drift-sense/docs/figures"
+# Use relative paths from repo root
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(REPO_ROOT, "submission", "DriftSense_Submission.pdf")
+FIGDIR = os.path.join(REPO_ROOT, "docs", "figures")
+
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(name="H1", parent=styles["Heading1"],
@@ -35,6 +39,7 @@ styles.add(ParagraphStyle(name="Cover", parent=styles["Title"],
 styles.add(ParagraphStyle(name="CoverSub", parent=styles["BodyText"],
                            fontSize=12, alignment=1, textColor=colors.grey,
                            spaceAfter=6))
+styles.add(ParagraphStyle(name="CoverInfo", parent=styles["Body"], alignment=1, fontSize=11))
 
 story = []
 
@@ -55,7 +60,7 @@ story.append(Paragraph(
     "Institution: Vellore Institute of Technology (VIT)<br/>"
     "GitHub repository: [INSERT REPO LINK]<br/>"
     "Video walkthrough: [INSERT VIDEO LINK]",
-    ParagraphStyle(name="CoverInfo", parent=styles["Body"], alignment=1, fontSize=11)))
+    styles["CoverInfo"]))
 story.append(PageBreak())
 
 # ---------------- 1. Problem understanding ----------------
@@ -81,7 +86,7 @@ story.append(Paragraph(
     "statement) alongside the localization accuracy and inference throughput.", styles["Body"]))
 
 # ---------------- 2. Approach & tech stack ----------------
-story.append(Paragraph("2. Approach &amp; Technology Stack", styles["H1"]))
+story.append(Paragraph("2. Approach & Technology Stack", styles["H1"]))
 story.append(Paragraph(
     "The submission has two parts: a synthetic dataset generator that produces realistic, "
     "physically-grounded DRAM-style and FinFET-style die imagery with recorded ground truth, "
@@ -164,14 +169,14 @@ story.append(Paragraph(
 
 data = [
     ["Metric", "Value"],
-    ["Success rate (error \u2264 5 px)", "90.0% (27/30)"],
+    ["Success rate (error ≤ 5 px)", "90.0% (27/30)"],
     ["Median error on successful matches", "0.10 px"],
     ["DRAM-style success rate", "100% (15/15)"],
     ["FinFET-style success rate", "80% (12/15)"],
     ["Misses correctly self-flagged low-confidence", "3/3 (100%)"],
     ["Held-out mixed_logic style (never tuned on)", "100% (10/10), median error 0.06 px"],
     ["End-to-end throughput (CPU, sandbox)", "~230 ms/sample, ~4.3 samples/s"],
-    ["Two-stage search speed-up vs. brute-force grid", "21.9s \u2192 7.2s on 30 pairs (~3x), same accuracy"],
+    ["Two-stage search speed-up vs. brute-force grid", "21.9s → 7.2s on 30 pairs (~3x), same accuracy"],
 ]
 tbl = Table(data, colWidths=[3.4 * inch, 2.6 * inch])
 tbl.setStyle(TableStyle([
@@ -201,7 +206,7 @@ if os.path.exists(fig1):
     story.append(Image(fig1, width=6.4 * inch, height=6.4 * inch * (692 / 2050)))
     story.append(Paragraph(
         "Figure 1. Failure-mode visualization for the hardest self-eval case. Ambiguity ratio "
-        "\u2248 1.0 (essentially tied peaks) is correctly flagged as low-confidence rather than "
+        "≈ 1.0 (essentially tied peaks) is correctly flagged as low-confidence rather than "
         "silently mis-reported.", styles["Small"]))
 
 story.append(Spacer(1, 14))
@@ -258,7 +263,7 @@ story.append(ListFlowable([
 ], bulletType="bullet"))
 
 # ---------------- 5. Limitations ----------------
-story.append(Paragraph("5. Known Limitations &amp; Next Steps", styles["H1"]))
+story.append(Paragraph("5. Known Limitations & Next Steps", styles["H1"]))
 story.append(ListFlowable([
     ListItem(Paragraph("The NCC baseline is a simple, fast, fully-explainable starting point "
                         "with no training dependency; it can be beaten on the hardest periodic "
