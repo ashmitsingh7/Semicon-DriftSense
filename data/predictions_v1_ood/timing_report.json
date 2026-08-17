@@ -1,9 +1,10 @@
 {
-  "n_samples": 30,
-  "total_wall_time_s": 4.829,
-  "mean_ms_per_sample": 160.97,
-  "p50_ms_per_sample": 179.77,
-  "p90_ms_per_sample": 342.63,
-  "throughput_samples_per_s": 6.21,
+  "n_samples": 10,
+  "total_wall_time_s": 1.034,
+  "mean_ms_per_sample": 103.39,
+  "p50_ms_per_sample": 108.07,
+  "p90_ms_per_sample": 112.55,
+  "throughput_samples_per_s": 9.67,
+  "method": "v1",
   "note": "CPU timing (this sandbox has no GPU). matchTemplate/warpAffine calls are drop-in cv2.cuda-accelerated on an actual H100 node; expected additional speedup is roughly an order of magnitude for this workload based on typical cv2.cuda template-matching benchmarks, not independently verified here."
 }

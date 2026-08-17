@@ -370,3 +370,133 @@ def localize_topk(reference_img, search_img, nominal_downsample=10.0,
                       "nms_radius": nms_radius, "dedup_radius": dedup_radius,
                       "window_r": window_r, "nominal_side": nominal_side}
     return out
+
+
+# ============================================================================
+# V5: Gated Reranker Orchestrator
+# ============================================================================
+
+def localize_v5_gated(
+    reference_img, search_img, nominal_downsample=10.0,
+    K=40, reranker_method="phase",  # "phase" or "native"
+    style=None, seed=None,  # required for native reranker
+    topk_kwargs=None,
+    rerank_kwargs=None,
+    return_debug=False
+):
+    """
+    V2 candidate generation + gated reranker.
+
+    This is the production entry point. It does NOT modify V1 or V2.
+
+    Args:
+        reference_img: native-resolution reference
+        search_img: 10x downsampled search image
+        nominal_downsample: expected scale ratio
+        K: number of V2 candidates
+        reranker_method: "phase" (fast, ~14ms) or "native" (slow, needs seed)
+        style: sample style ("dram", "finfet", "mixed_logic") -- required for native
+        seed: dataset seed for canvas regeneration -- required for native
+        topk_kwargs: extra args for localize_topk
+        rerank_kwargs: extra args for reranker
+        return_debug: include debug info
+
+    Returns:
+        prediction dict (same keys as localize()) + "rerank_applied", "rerank_method"
+        OR (prediction, debug) if return_debug=True
+    """
+    try:
+        from src.localizer import localize_topk
+    except ImportError:
+        from localizer import localize_topk
+    import time
+
+    topk_kwargs = topk_kwargs or {}
+    rerank_kwargs = rerank_kwargs or {}
+
+    t0 = time.time()
+    v2_candidates, v2_debug = localize_topk(
+        reference_img, search_img, nominal_downsample=nominal_downsample,
+        K=K, return_debug=True, **topk_kwargs)
+    v2_time = time.time() - t0
+
+    if not v2_candidates:
+        return None, {"v2_time": v2_time, "rerank_time": 0.0} if return_debug else None
+
+    # Run gated reranker
+    if reranker_method == "phase":
+        try:
+            from src.localization.rerankers.phase_reranker import phase_reranker_gated
+        except ImportError:
+            from localization.rerankers.phase_reranker import phase_reranker_gated
+        reranked, rerank_time, rerank_debug = phase_reranker_gated(
+            reference_img, search_img, v2_candidates, nominal_downsample,
+            **rerank_kwargs, return_debug=True)
+    elif reranker_method == "native":
+        if style is None or seed is None:
+            raise ValueError("native reranker requires style and seed")
+        try:
+            from src.localization.rerankers.native_verifier import native_reranker_gated
+        except ImportError:
+            from localization.rerankers.native_verifier import native_reranker_gated
+        reranked, rerank_time, rerank_debug = native_reranker_gated(
+            reference_img, search_img, v2_candidates, nominal_downsample,
+            style=style, seed=seed, **rerank_kwargs, return_debug=True)
+    else:
+        raise ValueError(f"Unknown reranker_method: {reranker_method}")
+
+    # Top-1 after reranking
+    top = reranked[0]
+
+    # Build prediction in same format as V1 localize()
+    prediction = {
+        "x": top["x"],
+        "y": top["y"],
+        "confidence": top.get("rerank_score", top["score"]),
+        "ambiguity_ratio": v2_debug.get("ambiguity_ratio"),
+        "scale": top.get("scale", nominal_downsample),
+        "rotation_deg": top.get("rotation_deg", 0),
+        "low_confidence_flag": top.get("rerank_score", top["score"]) < 0.35,
+        "rerank_applied": top.get("rerank_applied", False),
+        "rerank_method": reranker_method,
+    }
+
+    debug = {
+        "v2_time": v2_time,
+        "rerank_time": rerank_time,
+        "total_time": v2_time + rerank_time,
+        "n_candidates": len(v2_candidates),
+        "rerank_debug": rerank_debug,
+        **v2_debug
+    }
+
+    if return_debug:
+        return prediction, debug
+    return prediction
+
+
+# Convenience: phase-gated (fast, no seed needed)
+def localize_v5_phase_gated(
+    reference_img, search_img, nominal_downsample=10.0, K=40,
+    topk_kwargs=None, rerank_kwargs=None, return_debug=False
+):
+    return localize_v5_gated(
+        reference_img, search_img, nominal_downsample, K,
+        reranker_method="phase",
+        topk_kwargs=topk_kwargs, rerank_kwargs=rerank_kwargs,
+        return_debug=return_debug
+    )
+
+
+# Convenience: native-gated (needs style/seed)
+def localize_v5_native_gated(
+    reference_img, search_img, nominal_downsample=10.0, K=40,
+    style=None, seed=None,
+    topk_kwargs=None, rerank_kwargs=None, return_debug=False
+):
+    return localize_v5_gated(
+        reference_img, search_img, nominal_downsample, K,
+        reranker_method="native", style=style, seed=seed,
+        topk_kwargs=topk_kwargs, rerank_kwargs=rerank_kwargs,
+        return_debug=return_debug
+    )

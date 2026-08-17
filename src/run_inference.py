@@ -27,15 +27,23 @@ import time
 
 import cv2
 
-from localizer import localize
+from localizer import localize, localize_topk, localize_v5_phase_gated, localize_v5_native_gated
 
 
 def run_batch(args):
-    """Original batch mode: directory input -> predictions.json + timing_report.json"""
+    """Batch mode: directory input -> predictions.json + timing_report.json"""
     os.makedirs(args.output, exist_ok=True)
 
     search_paths = sorted(glob.glob(os.path.join(args.input, "search", "*.png")))
     sample_ids = [os.path.splitext(os.path.basename(p))[0] for p in search_paths]
+
+    # Load ground truth once for native method (needs style/seed)
+    gt = None
+    if args.method == "v5_native":
+        gt_path = os.path.join(args.input, "ground_truth.json")
+        if os.path.exists(gt_path):
+            with open(gt_path) as f:
+                gt = json.load(f)
 
     predictions = {}
     per_sample_ms = []
@@ -49,8 +57,27 @@ def run_batch(args):
         ref_img = cv2.imread(ref_path, cv2.IMREAD_GRAYSCALE)      # disk read
         search_img = cv2.imread(search_path, cv2.IMREAD_GRAYSCALE)  # disk read
 
-        pred = localize(ref_img, search_img,
-                         nominal_downsample=args.nominal_downsample)  # compute
+        if args.method == "v1":
+            pred = localize(ref_img, search_img,
+                             nominal_downsample=args.nominal_downsample)
+        elif args.method == "v2":
+            candidates, _ = localize_topk(ref_img, search_img,
+                                           nominal_downsample=args.nominal_downsample, K=40)
+            pred = candidates[0] if candidates else {"x": 0, "y": 0, "confidence": 0}
+        elif args.method == "v5_phase":
+            result = localize_v5_phase_gated(ref_img, search_img,
+                                               nominal_downsample=args.nominal_downsample, return_debug=True)
+            pred = result[0] if isinstance(result, tuple) else result
+        elif args.method == "v5_native":
+            if gt is None:
+                raise ValueError("v5_native requires ground_truth.json for style/seed")
+            meta = gt[sample_id]
+            result = localize_v5_native_gated(
+                ref_img, search_img, nominal_downsample=args.nominal_downsample,
+                style=meta["style"], seed=meta["seed"], return_debug=True)
+            pred = result[0] if isinstance(result, tuple) else result
+        else:
+            raise ValueError(f"Unknown method: {args.method}")
 
         predictions[sample_id] = pred
         per_sample_ms.append((time.time() - t0) * 1000.0)
@@ -69,6 +96,7 @@ def run_batch(args):
         "p50_ms_per_sample": round(sorted(per_sample_ms)[n // 2], 2) if n else None,
         "p90_ms_per_sample": round(sorted(per_sample_ms)[int(n * 0.9)], 2) if n else None,
         "throughput_samples_per_s": round(n / total_s, 2) if total_s > 0 else None,
+        "method": args.method,
         "note": "CPU timing (this sandbox has no GPU). matchTemplate/warpAffine "
                 "calls are drop-in cv2.cuda-accelerated on an actual H100 node; "
                 "expected additional speedup is roughly an order of magnitude "
@@ -116,6 +144,8 @@ def main():
                      help="path to search image (single-pair mode)")
     # Common
     ap.add_argument("--nominal_downsample", type=float, default=10.0)
+    ap.add_argument("--method", choices=["v1", "v2", "v5_phase", "v5_native"],
+                    default="v1", help="Localization method to use")
     args = ap.parse_args()
 
     # Determine mode

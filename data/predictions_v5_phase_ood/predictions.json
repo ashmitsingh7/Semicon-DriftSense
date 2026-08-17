@@ -1,0 +1,112 @@
+{
+  "mixed_logic_000": {
+    "x": 656.44,
+    "y": 251.72,
+    "confidence": 0.8199,
+    "ambiguity_ratio": null,
+    "scale": 9.615,
+    "rotation_deg": -1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_001": {
+    "x": 477.65,
+    "y": 444.02,
+    "confidence": 0.8043,
+    "ambiguity_ratio": null,
+    "scale": 9.615,
+    "rotation_deg": -1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_002": {
+    "x": 56.84,
+    "y": 687.53,
+    "confidence": 0.8644,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_003": {
+    "x": 585.91,
+    "y": 866.37,
+    "confidence": 0.861,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": 2.5,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_004": {
+    "x": 692.32,
+    "y": 551.63,
+    "confidence": 0.8294,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_005": {
+    "x": 646.59,
+    "y": 733.77,
+    "confidence": 0.7643,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_006": {
+    "x": 473.09,
+    "y": 720.25,
+    "confidence": 0.8941,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": 1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_007": {
+    "x": 493.98,
+    "y": 765.5,
+    "confidence": 0.8228,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": -1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_008": {
+    "x": 941.96,
+    "y": 307.92,
+    "confidence": 0.6803,
+    "ambiguity_ratio": null,
+    "scale": 10.0,
+    "rotation_deg": 1,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  },
+  "mixed_logic_009": {
+    "x": 514.34,
+    "y": 412.75,
+    "confidence": 0.7684,
+    "ambiguity_ratio": null,
+    "scale": 10.417,
+    "rotation_deg": -2.5,
+    "low_confidence_flag": false,
+    "rerank_applied": false,
+    "rerank_method": "phase"
+  }
+}
