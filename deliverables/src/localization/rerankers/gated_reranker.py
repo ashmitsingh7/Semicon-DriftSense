@@ -280,8 +280,8 @@ def gated_rerank(reference_img: np.ndarray,
         debug["phase_time_ms"] = round(phase_time * 1000, 1)
 
     debug["reranked"] = True
-    debug["pre_top1"] = {"x": candidates[0]["x"], "y": candidates[0]["y"], "score": candidates[0]["score"]}
-    debug["post_top1"] = {"x": reranked[0]["x"], "y": reranked[0]["y"]}
+    debug["pre_top1"] = {"x": candidates[0]["x"], "y": candidates[0]["y"], "confidence": candidates[0]["confidence"]}
+    debug["post_top1"] = {"x": reranked[0]["x"], "y": reranked[0]["y"], "confidence": reranked[0].get("confidence", reranked[0].get("score", 0))}
 
     return reranked, debug
 

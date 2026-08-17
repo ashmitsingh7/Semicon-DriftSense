@@ -1,0 +1,142 @@
+{
+  "mixed_logic_000": {
+    "style": "mixed_logic",
+    "seed": 9000,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      656.46,
+      251.64
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_001": {
+    "style": "mixed_logic",
+    "seed": 9101,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      477.63,
+      444.0
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_002": {
+    "style": "mixed_logic",
+    "seed": 9202,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      56.82,
+      687.48
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_003": {
+    "style": "mixed_logic",
+    "seed": 9303,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      585.88,
+      866.37
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_004": {
+    "style": "mixed_logic",
+    "seed": 9404,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      692.38,
+      551.56
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_005": {
+    "style": "mixed_logic",
+    "seed": 9505,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      646.58,
+      733.8
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_006": {
+    "style": "mixed_logic",
+    "seed": 9606,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      473.07,
+      720.36
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_007": {
+    "style": "mixed_logic",
+    "seed": 9707,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      493.96,
+      765.56
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_008": {
+    "style": "mixed_logic",
+    "seed": 9808,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      941.92,
+      307.94
+    ],
+    "gt_inset_size_px": 50.0
+  },
+  "mixed_logic_009": {
+    "style": "mixed_logic",
+    "seed": 9909,
+    "ref_native_size": 500,
+    "search_size": [
+      1000,
+      1000
+    ],
+    "gt_center_xy": [
+      514.4,
+      412.67
+    ],
+    "gt_inset_size_px": 50.0
+  }
+}
