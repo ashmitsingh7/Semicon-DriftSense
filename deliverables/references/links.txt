@@ -1,0 +1,25 @@
+# Reference URLs (from problem statement §11 and code docstrings)
+
+## Semiconductor Structures
+- Sze & Ng "Physics of Semiconductor Devices" 3rd ed: https://www.wiley.com/en-us/Physics+of+Semiconductor+Devices%2C+3rd+Edition-p-9780471143239
+- IRDS 2022 More Moore: https://irds.ieee.org/editions/2022
+
+## SEM Image Formation
+- ETH Zurich EM Teaching Notes: https://www.ethz.ch/en/research/electron-microscopy.html
+- Nanoscience Instruments "Secondary Electrons in SEM": https://www.nanoscience.com/techniques/secondary-electrons-in-sem/
+- St. Cloud State Univ "SEM A to Z": https://microscopy.stcloudstate.edu/sem-a-to-z/
+
+## SEM Noise
+- Poisson shot noise estimation: https://doi.org/10.1016/j.ultramic.2018.03.014
+- Mulapudi & Joy 2003: https://doi.org/10.1016/S0304-3991(02)00303-6
+- Cizmar et al. 2008: https://doi.org/10.1117/1.2981856
+- M-Denoiser 2019: https://doi.org/10.1109/ICCV.2019.00227
+
+## Template Matching
+- Lewis 1995 Fast NCC: https://www.cs.columbia.edu/~jlp/Papers/fastncc.pdf
+- Briechle & Hanebeck 2001: https://doi.org/10.1117/12.421495
+- Tian & Huhns 1986 Subpixel: https://doi.org/10.1016/0734-189X(86)90031-9
+- OpenCV phaseCorrelate: https://docs.opencv.org/4.x/dc/d6b/group__video__track.html#ga4e5d1c1e0c8c8e6c8e8b1c8e8c8c8c8c
+
+## Problem Statement
+- Applied Materials Semicon India Hackathon 2026: (internal PDF)

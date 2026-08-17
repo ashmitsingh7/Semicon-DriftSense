@@ -1,0 +1,74 @@
+# Dataset Generation Configuration
+# Applied Materials Drift-Sense Problem Statement
+# All parameters from build_dataset.py with problem statement compliance
+
+canvas:
+  size: [10000, 10000]          # native-resolution capture region (H x W)
+  downsample: 10                # nominal magnification ratio (100x ref / 10x search)
+
+search_size: [1000, 1000]       # downsampled search image size
+
+reference_crop_size:
+  dram: 300                     # ~30x30 px in search image after 10x downsample
+  finfet: 1000                  # ~100x100 px in search image
+  mixed_logic: 500              # held-out generalization style
+
+# Noise settings (reference is cleaner, search is noisier per problem statement)
+noise:
+  ref_dose_scale: 1.4           # reference: higher dose = lower noise
+  search_dose_scale: 0.6        # search: lower dose = higher noise
+  # Poisson-Gaussian noise model (shot noise + read noise)
+  # Cited: Mulapudi & Joy (2003); Cizmar et al. (2008); "M-Denoiser" (2019)
+
+# Geometric degradation parameters (independent per image)
+geometric:
+  reference:
+    max_blur_sigma: 1.0
+    max_rot_deg: 2.0
+    scale_jitter: 0.03
+  search:
+    max_blur_sigma: 1.4
+    max_rot_deg: 1.5
+    scale_jitter: 0.02
+
+# Edge brightening (SEM secondary electron edge effect)
+edge_brightening:
+  reference_gain: 0.6
+  search_gain: 0.5
+  sobel_ksize: 5
+  # Cited: ETH Zurich EM teaching notes; Nanoscience Instruments; St. Cloud State Univ.
+
+# Landmark blobs (guaranteed non-periodic features in reference footprint)
+landmarks:
+  count_range: [2, 4]           # 2-4 landmarks per reference crop
+  radius_native_range: [45, 80] # native radius (survives 10x downsample)
+  intensity_options: [0.03, 0.95] # dark/bright contrast relative to substrate
+  position_margin: 0.15         # avoid edges of reference crop (0.15 to 0.85)
+
+# RNG separation (mandatory: independent noise per image)
+rng:
+  ref_multiplier: 7919
+  ref_offset: 1
+  search_multiplier: 7919
+  search_offset: 2
+
+# Default generation settings
+defaults:
+  n_samples: 30
+  seed0: 1000
+  styles: ["dram", "finfet"]    # mixed_logic for OOD holdout
+  margin_from_border: 50
+
+# Problem statement citation sources
+citations:
+  structures:
+    - "Sze & Ng, Physics of Semiconductor Devices (2007) - DRAM 1T1C geometry"
+    - "IRDS 2022 More Moore chapter - FinFET fin/gate pitch conventions"
+  image_formation:
+    - "ETH Zurich, Electron Microscopy teaching notes - SE edge effect"
+    - "Nanoscience Instruments, 'Secondary Electrons in SEM' - edge enhancement"
+    - "St. Cloud State Univ. Center for Microscopy, 'SEM A to Z' - edge effect width"
+  noise:
+    - "Mulapudi & Joy (2003) - Poisson shot noise + Gaussian read noise"
+    - "Cizmar et al. (2008) - SEM noise model"
+    - "Zhang et al., 'M-Denoiser: Unsupervised image denoising for microscopy' (2019)"
