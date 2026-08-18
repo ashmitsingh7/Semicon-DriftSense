@@ -100,7 +100,7 @@ pause
 
 section "2/6  GROUND-TRUTH VERIFICATION (dram_000)"
 
-python3 -c '
+python3 << 'PYEOF'
 import json, math, subprocess
 
 gt_path = "data/self_eval/ground_truth.json"
@@ -116,14 +116,21 @@ pred = json.loads(result.stdout)
 gt = gt_data["dram_000"]["gt_center_xy"]
 err = math.hypot(pred["x"] - gt[0], pred["y"] - gt[1])
 
-print(f"Ground truth:    ({gt[0]:.2f}, {gt[1]:.2f})")
-print(f"Prediction:      ({pred[\"x\"]:.2f}, {pred[\"y\"]:.2f})")
-print(f"Localization error: {err:.2f} pixels")
-print(f"Passes 5 px criterion: {\"YES\" if err <= 5 else \"NO\"}")
-print(f"Confidence: {pred[\"confidence\"]}")
-print(f"Ambiguity ratio: {pred[\"ambiguity_ratio\"]}")
-print(f"Low confidence flag: {pred[\"low_confidence_flag\"]}")
-'
+x_str = f"{pred['x']:.2f}"
+y_str = f"{pred['y']:.2f}"
+gt_x_str = f"{gt[0]:.2f}"
+gt_y_str = f"{gt[1]:.2f}"
+err_str = f"{err:.2f}"
+pass_str = "YES" if err <= 5 else "NO"
+
+print(f"Ground truth:    ({gt_x_str}, {gt_y_str})")
+print(f"Prediction:      ({x_str}, {y_str})")
+print(f"Localization error: {err_str} pixels")
+print(f"Passes 5 px criterion: {pass_str}")
+print(f"Confidence: {pred['confidence']}")
+print(f"Ambiguity ratio: {pred['ambiguity_ratio']}")
+print(f"Low confidence flag: {pred['low_confidence_flag']}")
+PYEOF
 
 pause
 
@@ -143,7 +150,7 @@ python3 src/run_inference.py \
 
 echo
 
-python3 -c '
+python3 << 'PYEOF'
 import json, math, subprocess
 
 gt_path = "data/self_eval/ground_truth.json"
@@ -159,14 +166,21 @@ pred = json.loads(result.stdout)
 gt = gt_data["finfet_025"]["gt_center_xy"]
 err = math.hypot(pred["x"] - gt[0], pred["y"] - gt[1])
 
-print(f"Ground truth:    ({gt[0]:.2f}, {gt[1]:.2f})")
-print(f"Prediction:      ({pred[\"x\"]:.2f}, {pred[\"y\"]:.2f})")
-print(f"Localization error: {err:.2f} pixels")
-print(f"Passes 5 px criterion: {\"YES\" if err <= 5 else \"NO\"}")
-print(f"Confidence: {pred[\"confidence\"]}")
-print(f"Ambiguity ratio: {pred[\"ambiguity_ratio\"]}")
-print(f"Low confidence flag: {pred[\"low_confidence_flag\"]}")
-'
+x_str = f"{pred['x']:.2f}"
+y_str = f"{pred['y']:.2f}"
+gt_x_str = f"{gt[0]:.2f}"
+gt_y_str = f"{gt[1]:.2f}"
+err_str = f"{err:.2f}"
+pass_str = "YES" if err <= 5 else "NO"
+
+print(f"Ground truth:    ({gt_x_str}, {gt_y_str})")
+print(f"Prediction:      ({x_str}, {y_str})")
+print(f"Localization error: {err_str} pixels")
+print(f"Passes 5 px criterion: {pass_str}")
+print(f"Confidence: {pred['confidence']}")
+print(f"Ambiguity ratio: {pred['ambiguity_ratio']}")
+print(f"Low confidence flag: {pred['low_confidence_flag']}")
+PYEOF
 
 pause
 
