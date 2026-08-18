@@ -16,7 +16,9 @@ import time
 import cv2
 import numpy as np
 
-from localizer import localize
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from src.localization import localize
 
 
 def main():

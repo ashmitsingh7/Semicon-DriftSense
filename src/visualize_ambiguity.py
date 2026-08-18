@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from localizer import localize
+from localization.localizer import localize
 
 
 def main():

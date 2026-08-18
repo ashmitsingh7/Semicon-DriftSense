@@ -44,7 +44,7 @@ def should_rerank(nominal_side: int,
         return False
     if len(candidates) < 2:
         return False
-    margin = candidates[0]["score"] - candidates[1]["score"]
+    margin = candidates[0]["confidence"] - candidates[1]["confidence"]
     return margin < score_margin_threshold
 
 
@@ -251,9 +251,9 @@ def gated_rerank(reference_img: np.ndarray,
 
     debug = {
         "nominal_side": nominal_side,
-        "top1_score": candidates[0]["score"],
-        "top2_score": candidates[1]["score"] if len(candidates) > 1 else None,
-        "score_margin": candidates[0]["score"] - candidates[1]["score"] if len(candidates) > 1 else None,
+        "top1_score": candidates[0]["confidence"],
+        "top2_score": candidates[1]["confidence"] if len(candidates) > 1 else None,
+        "score_margin": candidates[0]["confidence"] - candidates[1]["confidence"] if len(candidates) > 1 else None,
         "reranked": False,
     }
 
@@ -280,8 +280,8 @@ def gated_rerank(reference_img: np.ndarray,
         debug["phase_time_ms"] = round(phase_time * 1000, 1)
 
     debug["reranked"] = True
-    debug["pre_top1"] = {"x": candidates[0]["x"], "y": candidates[0]["y"], "score": candidates[0]["score"]}
-    debug["post_top1"] = {"x": reranked[0]["x"], "y": reranked[0]["y"]}
+    debug["pre_top1"] = {"x": candidates[0]["x"], "y": candidates[0]["y"], "confidence": candidates[0]["confidence"]}
+    debug["post_top1"] = {"x": reranked[0]["x"], "y": reranked[0]["y"], "confidence": reranked[0].get("confidence", reranked[0].get("score", 0))}
 
     return reranked, debug
 
@@ -301,15 +301,18 @@ def localize_with_gated_rerank(reference_img: np.ndarray,
     Full pipeline: V1 -> V2 candidate pool -> optional gated rerank -> final prediction.
     Returns (final_prediction, debug_info).
     """
-    from localizer import localize, localize_topk
+    from ..v1_localize import localize
+    from ..v2_candidates import localize_v2
 
     # V1 baseline (fast, for ambiguity flag + fallback)
     v1_pred = localize(reference_img, search_img, nominal_downsample)
 
     # V2 candidate pool
-    v2_candidates, v2_debug = localize_topk(reference_img, search_img,
-                                             nominal_downsample=nominal_downsample,
-                                             K=K, return_debug=True)
+    v2_result = localize_v2(reference_img, search_img,
+                            nominal_downsample=nominal_downsample,
+                            K=K, return_debug=True)
+    v2_candidates = v2_result.get("candidates", [])
+    v2_debug = {k: v for k, v in v2_result.items() if k != "candidates"}
 
     # Gated rerank
     reranked, rerank_debug = gated_rerank(reference_img, search_img, v2_candidates,

@@ -27,7 +27,7 @@ import time
 
 import cv2
 
-from localizer import localize, localize_topk, localize_v5_phase_gated, localize_v5_native_gated
+from localization.localizer import localize, localize_topk, localize_v5_phase_gated, localize_v5_native_gated
 
 
 def run_batch(args):

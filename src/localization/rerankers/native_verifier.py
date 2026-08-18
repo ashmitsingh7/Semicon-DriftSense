@@ -16,7 +16,15 @@ import numpy as np
 import cv2
 import time
 from typing import List, Dict, Tuple, Optional
-from pattern_synth import synth_canvas
+
+# Import pattern_synth from dataset module
+try:
+    from ....dataset.pattern_synth import synth_canvas
+except ImportError:
+    # Fallback for when run as script
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    from src.dataset.pattern_synth import synth_canvas
 
 
 # Gate thresholds - derived from failure analysis, NOT tuned on test set
