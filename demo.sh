@@ -87,14 +87,11 @@ info "Reference:  data/self_eval/reference/dram_000.png"
 info "Search:     data/self_eval/search/dram_000.png"
 echo
 
-pred_json=$(python3 src/run_inference.py \
+python3 src/run_inference.py \
     --ref data/self_eval/reference/dram_000.png \
-    --search data/self_eval/search/dram_000.png)
+    --search data/self_eval/search/dram_000.png | python3 -m json.tool
 
-echo "Prediction (raw JSON from DriftSense):"
-echo "$pred_json" | python3 -m json.tool
 echo
-
 pause
 
 # ============================================================
@@ -103,27 +100,30 @@ pause
 
 section "2/6  GROUND-TRUTH VERIFICATION (dram_000)"
 
-python3 - <<'PY'
-import json
-import math
+python3 -c '
+import json, math, subprocess
 
 gt_path = "data/self_eval/ground_truth.json"
 with open(gt_path) as f:
     gt_data = json.load(f)
 
-pred = json.loads('''PRED_JSON'''.replace("PRED_JSON", """$pred_json"""))
+result = subprocess.run([
+    "python3", "src/run_inference.py",
+    "--ref", "data/self_eval/reference/dram_000.png",
+    "--search", "data/self_eval/search/dram_000.png"
+], capture_output=True, text=True)
+pred = json.loads(result.stdout)
 gt = gt_data["dram_000"]["gt_center_xy"]
-
 err = math.hypot(pred["x"] - gt[0], pred["y"] - gt[1])
 
 print(f"Ground truth:    ({gt[0]:.2f}, {gt[1]:.2f})")
-print(f"Prediction:      ({pred['x']:.2f}, {pred['y']:.2f})")
+print(f"Prediction:      ({pred[\"x\"]:.2f}, {pred[\"y\"]:.2f})")
 print(f"Localization error: {err:.2f} pixels")
-print(f"Passes ≤5 px criterion: {'YES ✓' if err <= 5 else 'NO ✗'}")
-print(f"Confidence: {pred['confidence']}")
-print(f"Ambiguity ratio: {pred['ambiguity_ratio']}")
-print(f"Low confidence flag: {pred['low_confidence_flag']}")
-PY
+print(f"Passes 5 px criterion: {\"YES\" if err <= 5 else \"NO\"}")
+print(f"Confidence: {pred[\"confidence\"]}")
+print(f"Ambiguity ratio: {pred[\"ambiguity_ratio\"]}")
+print(f"Low confidence flag: {pred[\"low_confidence_flag\"]}")
+'
 
 pause
 
@@ -137,35 +137,36 @@ info "Reference:  data/self_eval/reference/finfet_025.png"
 info "Search:     data/self_eval/search/finfet_025.png"
 echo
 
-pred_finfet_json=$(python3 src/run_inference.py \
+python3 src/run_inference.py \
     --ref data/self_eval/reference/finfet_025.png \
-    --search data/self_eval/search/finfet_025.png)
+    --search data/self_eval/search/finfet_025.png | python3 -m json.tool
 
-echo "Prediction:"
-echo "$pred_finfet_json" | python3 -m json.tool
 echo
 
-python3 - <<'PY'
-import json
-import math
+python3 -c '
+import json, math, subprocess
 
 gt_path = "data/self_eval/ground_truth.json"
 with open(gt_path) as f:
     gt_data = json.load(f)
 
-pred = json.loads('''PRED_JSON'''.replace("PRED_JSON", """$pred_finfet_json"""))
+result = subprocess.run([
+    "python3", "src/run_inference.py",
+    "--ref", "data/self_eval/reference/finfet_025.png",
+    "--search", "data/self_eval/search/finfet_025.png"
+], capture_output=True, text=True)
+pred = json.loads(result.stdout)
 gt = gt_data["finfet_025"]["gt_center_xy"]
-
 err = math.hypot(pred["x"] - gt[0], pred["y"] - gt[1])
 
 print(f"Ground truth:    ({gt[0]:.2f}, {gt[1]:.2f})")
-print(f"Prediction:      ({pred['x']:.2f}, {pred['y']:.2f})")
+print(f"Prediction:      ({pred[\"x\"]:.2f}, {pred[\"y\"]:.2f})")
 print(f"Localization error: {err:.2f} pixels")
-print(f"Passes ≤5 px criterion: {'YES ✓' if err <= 5 else 'NO ✗'}")
-print(f"Confidence: {pred['confidence']}")
-print(f"Ambiguity ratio: {pred['ambiguity_ratio']}")
-print(f"Low confidence flag: {pred['low_confidence_flag']}")
-PY
+print(f"Passes 5 px criterion: {\"YES\" if err <= 5 else \"NO\"}")
+print(f"Confidence: {pred[\"confidence\"]}")
+print(f"Ambiguity ratio: {pred[\"ambiguity_ratio\"]}")
+print(f"Low confidence flag: {pred[\"low_confidence_flag\"]}")
+'
 
 pause
 
